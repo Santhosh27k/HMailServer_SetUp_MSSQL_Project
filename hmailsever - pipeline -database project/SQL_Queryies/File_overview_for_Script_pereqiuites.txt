@@ -1,0 +1,192 @@
+1) File overview
+
+	This script is a full database schema + helper procedures + seed data for an application (looks like hMailServer schema). It:
+
+	Drops existing tables if present (cleanup)
+
+	Creates helper stored procedures to drop constraints / indexes / columns / tables
+
+	Creates many hm_* tables (accounts, domains, messages, rules, etc.)
+
+	Adds primary keys, unique constraints and indexes
+
+	Inserts initial data / settings (DNSBL, server messages, blocked attachments, lots of default settings)
+
+All of the above appears in the single file you uploaded. 
+
+
+---------------------------------------------------------------------------------------------------------------
+
+2) Initial "drop table if exists" cleanup----------
+
+At the top, there are many repeated lines like:
+
+if exists (select * from sysobjects where id = object_id('hm_accounts') and objectproperty(id, 'isusertable') = 1) drop table hm_accounts
+
+
+What this does:
+
+For each listed hm_* table, it checks whether a user table with that name exists (using legacy sysobjects + objectproperty) and drops it if present.
+
+
+Purpose: let the script be re-run cleanly (remove old tables before re-creating them). 
+
+
+Note / caveat: This uses legacy catalogs (sysobjects, objectproperty) instead of modern OBJECT_ID('schema.Table')/sys.tables. It also does not qualify table names with schema (assumes default schema). On modern SQL Server you might prefer:
+
+				IF OBJECT_ID('dbo.hm_accounts','U') IS NOT NULL DROP TABLE dbo.hm_accounts;
+
+
+(Recommendation only — the script still works on many SQL Server versions.) 
+---------------------------------------------------------------------------------------------------------------
+
+3) Stored procedure hm_drop_table_objects-------------------
+
+This proc is defined as:
+
+				create proc hm_drop_table_objects
+   				 @tablename sysname
+				as
+				...
+	
+
+What it does (section by section):
+
+	Declares a cursor that selects constraint names from sysobjects for the specified table (constraints types C, F, PK, UQ, D) and then loops to ALTER TABLE <table> DROP CONSTRAINT <name> for each — i.e., drops constraints for that table. 
+
+	Declares another cursor to find indexes from sysindexes for the table and drops them (DROP INDEX <table>.<index>), iterating in descending index id order. 
+
+	Returns 0.
+
+Why this exists:
+
+	It is a helper to remove all constraints and indexes for a table — useful before dropping a table or recreating it.
+
+Caveats / notes:
+
+	Uses legacy catalog views (sysobjects, sysindexes); could be updated to sys.tables, sys.indexes, sys.index_columns.
+
+	It uses dynamic SQL with exec(@cmd) and doesn’t print what it dropped — be careful in production. 
+
+---------------------------------------------------------------------------------------------------------------
+
+4) Stored procedure hm_drop_table_column
+
+Definition:
+
+				CREATE proc [dbo].[hm_drop_table_column]
+    				@tablename sysname,
+    				@columnname sysname
+				as
+				...
+
+
+What it does (stepwise):
+
+	Finds constraints referencing the column via INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE and loops, dropping them (ALTER TABLE ... DROP CONSTRAINT ...). 
+
+	Finds other table-level constraints that reference the column using sysconstraints/syscolumns and drops them. (Legacy system tables used.) 
+
+	Finds indexes on the column using sysindexes + sysindexkeys and drops them (DROP INDEX <table>.<index>). 
+
+	Finally executes ALTER TABLE <table> DROP COLUMN <column> to remove the column. 
+
+Why useful:
+
+	Safely cleans dependencies so a column can be dropped without errors.
+
+Caveats:
+
+	Uses legacy catalogs; no schema qualification in ALTER TABLE (should use QUOTENAME(schema) + QUOTENAME(table) to be safer).
+
+	No transaction/TRY..CATCH — partial failures could leave the DB in inconsistent state.
+
+---------------------------------------------------------------------------------------------------------------
+
+5) Table creation blocks (many create table hm_*)
+
+	The bulk of the file creates the application tables. Pattern for each table:
+
+			create table hm_accounts (
+ 			 accountid int identity (1, 1) not null,
+ 			 accountdomainid int not null,
+ 			 ...
+			)
+
+			ALTER TABLE hm_accounts ADD CONSTRAINT hm_accounts_pk PRIMARY KEY NONCLUSTERED (accountid)
+			ALTER TABLE hm_accounts ADD CONSTRAINT u_accountaddress UNIQUE NONCLUSTERED (accountaddress)
+			CREATE CLUSTERED INDEX idx_hm_accounts ON hm_accounts (accountaddress)
+
+Key points:---------------------
+
+	Each table is created with columns, many NOT NULL.
+
+	Primary keys are created (often as NONCLUSTERED PKs; sometimes PK is CLUSTERED — check each). 
+
+	Unique constraints and indexes follow. Index names and columns are defined to support lookups used by the application (e.g., idx_hm_messages on (messageaccountid, messagefolderid), etc.). 
+
+
+Useful groups of tables:-----------------
+
+	Accounts / Domains / Aliases: hm_accounts, hm_domains, hm_aliases, hm_domain_aliases — user and domain management. 
+
+	Mail storage / metadata: hm_messages, hm_message_metadata, hm_messagerecipients — stores mail, metadata and recipients. 
+
+I	MAP / folders: hm_imapfolders — folder tracking for accounts. 
+
+
+Rules & actions: hm_rules, hm_rule_criterias, hm_rule_actions — server-side message rules. 
+
+	Antispam / greylisting / DNSBL / SURBL: hm_dnsbl, hm_surblservers, hm_greylisting_triplets, etc. 
+
+Note on datatypes: Some text columns use ntext (deprecated) — modern SQL Server uses nvarchar(max).
+
+---------------------------------------------------------------------------------------------------------------
+
+6) Index and constraint patterns
+
+	The script mixes NONCLUSTERED PKs with explicit CLUSTERED INDEX creation. That’s a valid design choice — cluster keys chosen for frequently used query columns (e.g., address lookups). 
+
+	Many UNIQUE constraints added for lookups (e.g., u_domainname), improving data integrity.
+
+---------------------------------------------------------------------------------------------------------------
+
+7) Seed / initial data inserts
+
+	After table creation the script inserts default rows:
+
+	hm_securityranges gets two ranges: "Internet" and "My computer" (likely IP ranges). 
+
+	hm_servermessages seeded with standard server message templates (VIRUS_FOUND, SEND_FAILED_NOTIFICATION, etc.). 
+
+	hm_dnsbl and hm_surblservers entries for spam blocklists (Spamhaus, SpamCop, SURBL). 
+
+	hm_blocked_attachments seeded with many common dangerous extensions (*.exe, *.bat, *.scr, etc.). 
+
+	Many hm_settings rows inserted to initialize server configuration defaults (lots of keys like maxpop3connections, smtpnoofretries, protocolimap etc.). 
+
+	hm_tcpipports seeded with common SMTP/POP3/IMAP ports (25, 587, 110, 143). 
+
+	Final hm_dbversion value inserted (likely app schema version). 
+
+
+
+Purpose:
+
+	Ensures that a newly created database has sensible defaults so the application can run immediately.
+---------------------------------------------------------------------------------------------------------------
+
+8) Practical notes & recommended improvements
+
+	You didn’t ask for changes, but useful tips if you’ll run or edit this file:
+
+		Run on a dev DB first — it drops many objects. Don’t run on production inadvertently. 
+
+		Schema qualification — use dbo. qualifiers and QUOTENAME() when building dynamic SQL to avoid name collisions and special-character issues. 
+
+		Modern catalogs — prefer sys.tables, sys.indexes, sys.index_columns, sys.schemas over legacy sysobjects, sysindexes, sysconstraints. 
+		
+		Avoid ntext — convert to nvarchar(max) for modern compatibility. 
+
+		Add transactions and error handling for schema changes (wrap related changes in BEGIN TRAN ... COMMIT and use TRY/CATCH to roll back on failure). 
+

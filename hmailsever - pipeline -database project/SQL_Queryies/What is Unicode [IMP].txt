@@ -1,0 +1,66 @@
+
+🔤 What are Unicode strings in SQL?
+
+In SQL Server, Unicode strings are character strings that can store characters from multiple languages — including symbols, emojis, and non-Latin scripts (e.g., Hindi, Chinese, Arabic).
+
+They are stored using 2 bytes per character, unlike non-Unicode strings (which usually use 1 byte per character and are limited to one code page / language).
+
+--------------------------------------------------------------
+
+💡 How to identify a Unicode string in SQL
+
+There are two parts that make a string Unicode in SQL Server:
+
+
+Feature		| 		Explanation									|	Example
+----------------|-----------------------------------------------------------------------------------------------|------------------------------
+Prefix N	|Adding an N before a string literal tells SQL Server it’s Unicode (N = National character set)	|	N'Hello'
+		|												|
+Data type	|Use NCHAR, NVARCHAR, or NTEXT (deprecated) instead of CHAR, VARCHAR, or TEXT			|	NVARCHAR(100)
+
+
+
+🧠 Example
+
+		-- Create a Unicode table
+
+		CREATE TABLE Greetings (
+    			ID INT IDENTITY(1,1),
+    			Message NVARCHAR(100)
+			);
+
+		-- Insert Unicode strings
+		INSERT INTO Greetings (Message)
+		VALUES 
+		(N'Hello'),           -- English
+		(N'नमस्ते'),          -- Hindi
+		(N'你好'),             -- Chinese
+		(N'مرحبا'),           -- Arabic
+		(N'👋🌍');             -- Emoji
+
+-- Select data
+
+SELECT * FROM Greetings;
+
+------------------------------------------------------------
+✅ Without the N prefix, non-ASCII characters may get stored incorrectly (as ? or gibberish).
+
+-------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------
+
+⚖️ Unicode vs Non-Unicode Summary
+
+Type		Data Type			Prefix		Bytes/Char	Language Support
+Non-Unicode	CHAR, VARCHAR, TEXT		'text'		1		Single language (code page)
+Unicode		NCHAR, NVARCHAR, NTEXT		N'text'		2		Multiple languages
+
+----------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------
+
+🧩 When to use Unicode
+
+ * When your app or database must support multiple languages.
+
+ * When you deal with names, addresses, or content that may include non-English characters.
+
+ * When you need accurate sorting and comparison across locales.

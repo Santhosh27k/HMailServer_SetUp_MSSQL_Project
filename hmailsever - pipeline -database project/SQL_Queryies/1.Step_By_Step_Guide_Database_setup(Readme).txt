@@ -1,0 +1,159 @@
+<!-- ================================================================
+  Project     : hMailServer SQL Database Setup - Step-by-Step Guide
+  Author      : Santhosh
+  GitHub      : https://github.com/Santhosh27k
+  LinkedIn    : https://www.linkedin.com/in/santhosh-s-219287228
+  Description : Step-by-step SQL scripts and notes to install, remove,
+                and manage an hMailServer instance using Microsoft SQL Server.
+  Files       : 1_Main_Script_Prerequisites.sql
+                2_Main_find_and_delete_that_SQL_login.sql
+                3_Main_Create_Login_Database.sql
+                4_Main_Create_Table.sql
+                5_Alter_Role_Sysadmin.sql
+                6_Change_Password.sql
+                7_Alter_Name_on_different_levels.sql
+  Usage       : Read carefully. Steps 1-2 are optional cleanup steps.
+  Version     : 1.0
+  Date        : 2025-11-05
+  License     : MIT (or choose your preferred license)
+================================================================ -->
+
+
+============================================================
+hMailServer SQL Project — Step-by-Step Execution Guide
+============================================================
+
+This document explains how to execute the SQL scripts in the correct order to
+set up (or reset) your hMailServer SQL Database environment.
+
+------------------------------------------------------------
+📁 FILE ORDER AND PURPOSE
+------------------------------------------------------------
+
+1️⃣  1_Main_Script_Prerequisites.sql
+------------------------------------------------------------
+Purpose:
+    - Clean up any existing hMailServer setup.
+    - Drops all constraints, indexes, tables, and finally the database itself.
+    - Can also drop the associated SQL login if defined.
+When to Run:
+    - ONLY if you already have a previous hMailServer database setup
+      and want to completely remove it before reinstalling or rebuilding.
+Important:
+    - Script is safe by default and runs in preview mode.
+      Set @ConfirmDrop = 1 to actually execute deletions.
+Notes:
+    - This is an optional cleanup step (Step 1).
+
+------------------------------------------------------------
+
+2️⃣  2_Main_find_and_delete_that_SQL_login.sql
+------------------------------------------------------------
+Purpose:
+    - Finds and deletes SQL Server logins related to a previous hMailServer setup.
+    - Useful if an old login (e.g., “hmailuser”) remains even after the database was dropped.
+    - Prevents login conflicts when recreating the hMailServer database and user.
+When to Run:
+    - ONLY if a previous installation existed and you are performing a clean reinstallation.
+    - Run this script after Step 1 (Prerequisites) and before creating the new login/database.
+What It Does:
+    - Searches for any login with names containing “hmail” or related keywords.
+    - Displays matching logins.
+    - Offers a controlled way to drop those logins safely.
+Notes:
+    - This is an optional cleanup step (Step 2).
+    - Always confirm the login name before deleting.
+
+------------------------------------------------------------
+
+3️⃣  3_Main_Create_Login_Database.sql
+------------------------------------------------------------
+Purpose:
+    - Creates a new SQL LOGIN and PASSWORD in the master database.
+    - Creates the hMailServer database (e.g., hMailServerDB).
+    - Maps the login to a database user inside the hMailServer database.
+    - Grants the user the `db_owner` role for full access.
+When to Run:
+    - Always run this script after cleanup (if performed) to initialize a new setup.
+
+------------------------------------------------------------
+
+4️⃣  4_Main_Create_Table.sql
+------------------------------------------------------------
+Purpose:
+    - Creates all necessary tables for the hMailServer schema.
+    - Adds constraints (Primary Keys, Foreign Keys, Unique Keys).
+    - Creates indexes for performance optimization.
+When to Run:
+    - After the database and user have been successfully created.
+Notes:
+    - Run this script while connected to the `hMailServerDB` database.
+    - Use the official schema or customize based on your configuration.
+
+------------------------------------------------------------
+
+5️⃣  5_Alter_Role_Sysadmin.sql
+------------------------------------------------------------
+Purpose:
+    - Demonstrates how to promote a SQL login to higher server-level roles.
+    - Shows examples for adding or removing a login from:
+         • `sysadmin` (server-level)
+         • `db_owner` (database-level)
+When to Run:
+    - Optional — use only if you need to grant or revoke administrative privileges.
+
+------------------------------------------------------------
+
+6️⃣  6_Change_Password.sql
+------------------------------------------------------------
+Purpose:
+    - Changes the SQL login password for your hMailServer login.
+    - Supports forcing policy checks and password expiration options.
+When to Run:
+    - Anytime you want to change or enforce stronger security credentials.
+
+------------------------------------------------------------
+
+7️⃣  7_Alter_Name_on_different_levels.sql
+------------------------------------------------------------
+Purpose:
+    - Demonstrates how to rename a login or database user.
+    - Allows remapping a renamed user to a different SQL login.
+When to Run:
+    - Optional — use when renaming users or restructuring accounts.
+
+------------------------------------------------------------
+⚙️ RECOMMENDED EXECUTION FLOW
+------------------------------------------------------------
+
+   ⚠️ Optional Cleanup Steps (only if an old hMailServer setup exists):
+      Step 1 → Run: 1_Main_Script_Prerequisites.sql
+      Step 2 → Run: 2_Main_find_and_delete_that_SQL_login.sql
+
+   🧱 New Installation Steps:
+      Step 3 → Run: 3_Main_Create_Login_Database.sql
+      Step 4 → Run: 4_Main_Create_Table.sql
+
+   🔧 Optional Administrative Scripts:
+      Step 5 → Run: 5_Alter_Role_Sysadmin.sql
+      Step 6 → Run: 6_Change_Password.sql
+      Step 7 → Run: 7_Alter_Name_on_different_levels.sql
+
+------------------------------------------------------------
+🧠 NOTES & BEST PRACTICES
+------------------------------------------------------------
+• Always take backups before dropping or altering any database or login.
+• Use `PRINT` messages and preview flags to confirm expected results.
+• Run these scripts from SQL Server Management Studio (SSMS)
+  using an account with sufficient privileges.
+• Confirm each step completes successfully before proceeding to the next.
+• Never modify the master database directly unless absolutely necessary.
+
+------------------------------------------------------------
+End of File
+------------------------------------------------------------
+
+
+
+
+

@@ -1,0 +1,75 @@
+🧩 What is an Object in SQL Server?
+
+In SQL Server, an object is any individual structure or entity in the database that you can create, store, or manipulate.
+
+Think of it as things inside the database that you can interact with — like tools in a toolbox.
+
+-----------------------------------------------------
+
+🔹 Common SQL Server Objects
+
+Object Type		|		Description
+------------------------|-------------------------------------------------
+Table			|	Stores rows and columns of data (like an Excel sheet).
+View			|	A virtual table based on a query (doesn’t store data itself).
+Stored Procedure	|	A precompiled SQL code block that performs actions or tasks.
+Function		|	A reusable piece of code that returns a value or table.
+Trigger			|	A procedure that automatically runs when data changes (INSERT/UPDATE/DELETE).
+Index			|	Improves query performance by speeding up data retrieval.
+Constraint		|	Rules applied to columns or tables to enforce data integrity (PRIMARY KEY, FOREIGN KEY, UNIQUE, CHECK).
+Schema			|	A container that groups database objects logically.
+Sequence		|	Generates numeric values in a specific order.
+Synonym			|	An alias for another database object (like a shortcut).
+
+--------------------------------------------------
+
+🔹 Key Points About Objects
+
+1.Each object has a name (e.g., Employees, GetAllEmployees).
+
+2.Each object lives in a database — you must be in the right database to see it.
+
+3.All objects are stored in system catalogs (like sys.objects or sys.tables), which SQL Server uses to keep track of everything.
+
+----------------------------------------------------------
+
+🔹 Example: Listing All Objects in Current Database
+
+			SELECT name, type_desc
+			FROM sys.objects;
+
+
+This will show:
+
+	*Tables
+
+	*Views
+
+	*Stored procedures
+
+	*Functions
+
+	*Triggers
+		…everything inside the current database.
+
+----------------------------------------------------------------------
+🔹 Visual Analogy
+
+Imagine your database is a library:
+
+	Tables → bookshelves
+
+	Views → reading guides (virtual view of books)
+
+	Stored Procedures → library assistants that do tasks for you
+
+	Functions → calculators to get specific info from books
+
+	Triggers → alarms that ring when something changes
+
+	Indexes → an index at the back of a book to find info quickly
+
+
+✅ Summary
+
+An object in SQL Server is any named entity inside a database that stores, organizes, or manipulates data.

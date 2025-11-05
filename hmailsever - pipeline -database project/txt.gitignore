@@ -1,0 +1,65 @@
+# =========================
+# hMailServer SQL Project
+# =========================
+
+# Ignore system files
+Thumbs.db
+.DS_Store
+
+# Ignore temporary or backup files
+*.bak
+*.tmp
+*.log
+*.old
+*.temp
+~$*
+
+# Ignore SQL Server Management Studio backup & cache
+*.sqlproj
+*.sqlproj.user
+*.dacpac
+*.mdf
+*.ldf
+
+# Ignore hMailServer program/config files
+# (sensitive or system-installed files)
+C:/Program Files (x86)/hMailServer/**
+C:/Program Files/hMailServer/**
+hMailServer.ini
+config/hMailServer.ini
+config-examples/hMailServer.ini.example  # Only keep example
+
+# Ignore credentials and secrets
+*.env
+*.secret
+passwords.txt
+*.key
+*.pem
+
+# Ignore Power BI files
+*.pbix
+*.pbit
+*.dataset
+*.datacache
+
+# Ignore Visual Studio Code settings (optional)
+.vscode/
+*.code-workspace
+
+# Ignore compiled or package files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.class
+*.jar
+
+# Ignore git metadata (redundant safety)
+.git/
+.gitignore
+
+# Ignore compressed or exported archives
+*.zip
+*.rar
+*.7z
+*.tar.gz

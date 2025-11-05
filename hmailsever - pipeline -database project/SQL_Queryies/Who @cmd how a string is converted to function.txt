@@ -1,0 +1,122 @@
+
+Question -
+
+	SET @cmd = 'ALTER TABLE ' + QUOTENAME(@tablename) + ' DROP CONSTRAINT ' + QUOTENAME(@constname); 
+	-- isnt it in inside qutoes then it make it a string right then how this will turn into function ?
+
+
+Answer - 
+
+🔹 What’s happening in this line?
+
+			SET @cmd = 'ALTER TABLE ' + QUOTENAME(@tablename) + ' DROP CONSTRAINT ' + QUOTENAME(@constname);
+
+------------------------------
+
+Step by Step:
+
+1]@cmd
+
+This is a variable of type NVARCHAR(MAX) (or similar).
+
+It is meant to store a SQL command as a string.
+
+-------------------------------
+
+2]'ALTER TABLE '
+
+Everything inside single quotes is a literal string.
+
+-------------------------------
+
+3]QUOTENAME(@tablename)
+
+This function returns the table name safely enclosed in brackets [TableName].
+
+Example: if @tablename = Employees, QUOTENAME(@tablename) → [Employees].
+
+-------------------------------
+
+4]+ operator
+
+Concatenates strings in SQL Server.
+
+-------------------------------
+
+5]Final String
+
+Suppose @tablename = Employees and @constname = PK_Employees.
+
+-------------------------------
+
+
+After concatenation:
+
+			@cmd = 'ALTER TABLE [Employees] DROP CONSTRAINT [PK_Employees]'  
+
+ ---which still is a string
+
+--------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------
+
+🔹 Why is this not a function yet?
+
+At this stage, @cmd is just a string.
+
+SQL Server does not execute the string automatically.
+
+To actually run it, you need dynamic SQL execution using:
+
+
+					EXEC sp_executesql @cmd;
+
+
+or
+
+					EXEC(@cmd);
+
+
+sp_executesql is a system stored procedure that executes a string as SQL code.
+
+That’s how your “string” becomes a real command that SQL Server executes.
+
+--------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------
+
+🔹 Relationship with Functions
+------------------------
+
+QUOTENAME() is a function. ✅
+
+It’s executed inside the string building process to safely escape object names.
+
+Its output is concatenated into the string @cmd.
+
+---------------
+
+@cmd itself is not a function. ❌
+
+It’s a string variable that contains a command.
+
+You turn it into an executable command by passing it to EXEC or sp_executesql.
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------
+
+
+
+🔹 Analogy
+
+Think of it like this in programming:
+
+				table = "Employees"
+				constraint = "PK_Employees"
+
+				cmd = "ALTER TABLE " + table + " DROP CONSTRAINT " + constraint  	# Just a string
+				exec(cmd)  								# Now it runs as code
+		
+
+QUOTENAME() in SQL = adding safe brackets [ ] automatically.
+
+EXEC(@cmd) in SQL = actually runs the command.

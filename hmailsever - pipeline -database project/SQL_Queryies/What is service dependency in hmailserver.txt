@@ -1,0 +1,55 @@
+What is service dependency? in hmailserver ?
+
+--------------------------------------------------------------------------------------------------------------------------
+🧩 What “Service dependency” means?
+
+
+When hMailServer runs, it runs as a Windows service (like a background program).
+That service needs the SQL Server database to be running first before it starts — otherwise, hMailServer will fail to connect and crash at startup.
+
+👉 The “Service dependency” setting tells Windows:
+
+“Do not start hMailServer until SQL Server is fully started.”
+
+---------------------------------------------------------------------------------------------------------------------
+
+🧩 Why it matters?
+
+
+Without the dependency:
+
+If your PC restarts, Windows might start hMailServer before SQL Server is ready.
+
+hMailServer will then fail to connect to the database (Database connection error).
+
+With the dependency:
+
+Windows ensures that SQL Server starts first, then hMailServer starts safely after that.
+
+----------------------------------------------------------------------------------------------------------------------
+
+🧩 What to select?
+
+During setup, hMailServer will show a list of services to depend on.
+You should select your SQL Server service name, usually one of these:
+
+
+
+SQL Server Edition	|	Typical Service Name
+------------------------|----------------------
+SQL Server Express	|	MSSQL$SQLEXPRESS
+Default instance	|	MSSQLSERVER
+
+
+
+✅ Pick the one that matches your SQL Server instance name (you can check it in “Services.msc” → look for “SQL Server (SQLEXPRESS)” or similar).
+
+--------------------------------------------------------------------------------------------------------------------------------------
+🧠 In short
+
+
+Step				|	Action				|	Why
+------------------------------------------------------------------------|---------------------------------------------------------------
+Open Service dependency window	|	During install			|	hMailServer setup
+Select MSSQL$SQLEXPRESS		|	Or your SQL Server instance	|	Ensures SQL starts first
+Finish setup			|	✅				|	Stable startup every time

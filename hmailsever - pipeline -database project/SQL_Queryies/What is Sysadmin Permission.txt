@@ -1,0 +1,29 @@
+
+
+========================================================================
+Question -
+
+Sysadmin , if i create a login with sysadmin then delet it after the tables are created then how can hamil connect do i have to recreate a new connection or login use select excising table ?
+
+----------
+Answer - 
+
+When you create a login with the sysadmin role in SQL Server, that login has full administrative access to the entire SQL Server instance, including all databases and tables. If you delete or drop that sysadmin login after tables have been created, the following happens:
+
+The tables and data remain intact in the database because they belong to the database, not the login.
+
+However, any connections using that deleted login will no longer work, as the login is removed.
+
+For "hamil" (or any other user) to connect and access those existing tables after the sysadmin login is deleted:
+
+You must have a valid login to connect to SQL Server.
+
+That login should either have access rights to the database where the tables reside or be mapped to a database user with sufficient permissions.
+
+If "hamil" does not have a login, you need to create a new login for "hamil".
+
+If a login exists but no proper database user or permissions, you need to create a database user mapped to that login and grant necessary permissions to access the tables.
+
+In short, deleting a sysadmin login does not delete the tables, but any connections through that login will fail. You must create or use a valid login (non-sysadmin login is fine if permissions are granted) and connect with that login to query the existing tables. No need to recreate tables, just set up proper login, user, and permissions
+
+==================================================================================================
